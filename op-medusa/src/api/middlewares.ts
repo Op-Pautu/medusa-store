@@ -6,6 +6,7 @@ import {
 import { createFindParams } from "@medusajs/medusa/api/utils/validators";
 import { z } from "zod";
 import { PostAdminCreateBrand } from "./admin/brands/validators";
+import { PostAdminCreateTest } from "src/api/admin/tests/validators";
 
 export const GetBrandsSchema = createFindParams();
 
@@ -15,10 +16,6 @@ export default defineMiddlewares({
       matcher: "/admin/brands",
       method: "POST",
       middlewares: [validateAndTransformBody(PostAdminCreateBrand)],
-    },
-    {
-      matcher: "/admin/products",
-      method: ["POST"],
       additionalDataValidator: {
         brand_id: z.string().optional(),
       },
@@ -32,6 +29,14 @@ export default defineMiddlewares({
           isList: true,
         }),
       ],
+    },
+    {
+      matcher: "/admin/tests",
+      method: "POST",
+      middlewares: [validateAndTransformBody(PostAdminCreateTest)],
+      additionalDataValidator: {
+        test_id: z.string().optional(),
+      },
     },
   ],
 });

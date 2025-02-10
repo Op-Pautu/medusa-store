@@ -2,26 +2,21 @@ import { LinkDefinition } from "@medusajs/framework/types";
 import { Modules } from "@medusajs/framework/utils";
 import { StepResponse } from "@medusajs/framework/workflows-sdk";
 import { createProductsWorkflow } from "@medusajs/medusa/core-flows";
-import { BRAND_MODULE } from "src/modules/brand";
-import BrandModuleService from "src/modules/brand/service";
+import { TEST_MODULE } from "src/modules/test";
+import TestModuleService from "src/modules/test/service";
 
 createProductsWorkflow.hooks.productsCreated(
   async ({ products, additional_data }, { container }) => {
-    if (!additional_data?.brand_id) {
+    if (!additional_data?.test_id) {
       return new StepResponse([], []);
     }
+    const testModuleService: TestModuleService = container.resolve(TEST_MODULE);
 
-    const brandModuleService: BrandModuleService =
-      container.resolve(BRAND_MODULE);
+    await testModuleService.retrieveTest(additional_data.test_id as string);
 
-    // if the brand doesn't exist, an error is thrown.
-    await brandModuleService.retrieveBrand(additional_data.brand_id as string);
-
-    //  link brand to product
+    // link product to test
     const link = container.resolve("link");
-
     const logger = container.resolve("logger");
-
     const links: LinkDefinition[] = [];
 
     for (const product of products) {
@@ -29,28 +24,24 @@ createProductsWorkflow.hooks.productsCreated(
         [Modules.PRODUCT]: {
           product_id: product.id,
         },
-
-        [BRAND_MODULE]: {
-          brand_id: additional_data.brand_id,
+        [TEST_MODULE]: {
+          test_id: additional_data.test_id,
         },
       });
     }
 
     await link.create(links);
 
-    logger.info("Linked brand to products");
+    logger.info("Linked test to products");
 
     return new StepResponse(links, links);
   },
-
-  // compensation fn
   async (links, { container }) => {
     if (!links?.length) {
       return;
     }
 
     const link = container.resolve("link");
-
     await link.dismiss(links);
   }
 );
